@@ -1,0 +1,21 @@
+# Evolution params
+n_generations: 100
+population_size: 100
+remove_population_pct: 0.8
+n_elites: 10
+mutation_rate: 0.1
+mutation_factor: 0.1
+save_path: results/test
+seed_dir: null
+
+# Prescriptor-specific params
+prescriptor_params:
+  model_params:
+    in_size: 10
+    hidden_size: 16
+    out_size: 6
+  device: cuda
+
+# TODO: Can this be removed?
+outcomes:
+  - reward
