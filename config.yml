@@ -5,8 +5,9 @@ remove_population_pct: 0.8
 n_elites: 10
 mutation_rate: 0.1
 mutation_factor: 0.1
-save_path: results/test
+save_path: results/optimize
 seed_dir: null
+val_interval: 1
 
 # Prescriptor-specific params
 prescriptor_params:
@@ -15,6 +16,13 @@ prescriptor_params:
     hidden_size: 16
     out_size: 6
   device: cuda
+
+# Evaluation params
+eval_params:
+  epochs: 300
+  batch_size: 16
+  device: cuda
+
 
 # TODO: Can this be removed?
 outcomes:

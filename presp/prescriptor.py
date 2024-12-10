@@ -21,7 +21,6 @@ class Prescriptor(ABC):
         Generates actions from context.
         TODO: Is there a nicer way to have this be extensible?
         """
-        pass
 
     @abstractmethod
     def save(self, path: Path):
@@ -50,9 +49,10 @@ class BuildingPrescriptor(Prescriptor):
         """
         Gets sigmoided output between 0 and 1, then multiply by 2 and subtract 1 to get between -1 and 1.
         """
-        outputs = self.model(context)
-        actions = torch.sigmoid(outputs) * 2 - 1
-        return actions
+        with torch.no_grad():
+            outputs = self.model(context)
+            actions = torch.sigmoid(outputs) * 2 - 1
+            return actions
 
     def save(self, path: Path):
         torch.save(self.model.state_dict(), path)

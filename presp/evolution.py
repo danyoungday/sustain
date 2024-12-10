@@ -20,9 +20,11 @@ class Evolution:
                  mutation_factor: float,
                  save_path: str,
                  seed_dir: str,
+                 val_interval: int,
                  outcomes: list[str],
                  prescriptor_factory: PrescriptorFactory,
-                 evaluator: Evaluator):
+                 evaluator: Evaluator,
+                 validator: Evaluator):
         
         self.n_generations = n_generations
         self.population_size = population_size
@@ -31,10 +33,13 @@ class Evolution:
         self.mutation_rate = mutation_rate
         self.mutation_factor = mutation_factor
         self.save_path = Path(save_path)
+        self.save_path.mkdir(parents=False, exist_ok=False)
         self.seed_dir = Path(seed_dir) if seed_dir is not None else None
+        self.val_interval = val_interval
 
         self.prescriptor_factory = prescriptor_factory
         self.evaluator = evaluator
+        self.validator = validator
 
         self.outcomes = outcomes
 
@@ -57,9 +62,13 @@ class Evolution:
             candidate.cand_id = f"{self.generation}_{i}"
             self.population.append(candidate)
 
+        # TODO: This is a really hacky way to do this.
+        self.evaluator.update_predictor([None for _ in range(self.n_elites)])
+
         self.evaluator.evaluate_population(self.population)
         self.population = self.sort_pop(self.population)
         self.record_results()
+        self.validate()
         self.generation += 1
 
     def selection(self, sorted_population: list[Prescriptor]) -> list[Prescriptor]:
@@ -101,12 +110,12 @@ class Evolution:
         Record results from population.
         """
         rows = []
-        (self.save_path / str(self.generation)).mkdir(parents=True, exist_ok=True)
+        # (self.save_path / str(self.generation)).mkdir(parents=True, exist_ok=True)
         for candidate in self.population:
             # Save to file if it's new and rank 1.
-            cand_gen = int(candidate.cand_id.split("_")[0])
-            if candidate.rank == 1 and cand_gen == self.generation:
-                candidate.save(self.save_path / str(cand_gen) / f"{candidate.cand_id}.pt")
+            # cand_gen = int(candidate.cand_id.split("_")[0])
+            # if candidate.rank == 1 and cand_gen == self.generation:
+            #     candidate.save(self.save_path / str(cand_gen) / f"{candidate.cand_id}.pt")
             # Record candidates' results
             row = {"cand_id": candidate.cand_id, "rank": candidate.rank, "distance": candidate.distance}
             for outcome, metric in zip(self.outcomes, candidate.metrics):
@@ -115,6 +124,18 @@ class Evolution:
 
         df = pd.DataFrame(rows)
         df.to_csv(self.save_path / f"{self.generation}.csv", index=False)
+
+    def validate(self):
+        rows = []
+        (self.save_path / "validation").mkdir(parents=True, exist_ok=True)
+        for candidate in self.population:
+            val_metrics = self.validator.evaluate_candidate(candidate)
+            row = {"cand_id": candidate.cand_id}
+            for outcome, metric in zip(self.outcomes, val_metrics):
+                row[outcome] = metric
+            rows.append(row)
+        df = pd.DataFrame(rows)
+        df.to_csv(self.save_path / "validation" / f"{self.generation}.csv", index=False)
 
     def step(self):
         """
@@ -125,6 +146,8 @@ class Evolution:
         4. Sorts the population.
         """
         elites = self.population[:self.n_elites]
+        # Collect data and train predictor for evaluation
+        self.evaluator.update_predictor(elites)
 
         n_keep = int(self.population_size * (1 - self.remove_population_pct))
         next_pop = self.create_pop(self.population[:n_keep])
@@ -132,11 +155,13 @@ class Evolution:
         for i, candidate in enumerate(next_pop):
             candidate.cand_id = f"{self.generation}_{i}"
 
-        self.evaluator.evaluate_population(next_pop)
         next_pop = elites + next_pop
+        self.evaluator.evaluate_population(next_pop, force=True)
         self.population = self.sort_pop(next_pop)
 
         self.record_results()
+        if self.generation % self.val_interval == 0 or self.generation == self.n_generations:
+            self.validate()
         self.generation += 1
 
     def run_evolution(self):

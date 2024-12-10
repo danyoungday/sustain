@@ -4,7 +4,7 @@ import shutil
 
 import yaml
 
-from presp.evaluator import BuildingEvaluator
+from presp.evaluator import BuildingEvaluator, BuildingValidator
 from presp.evolution import Evolution
 from presp.prescriptor import BuildingPrescriptorFactory
 
@@ -27,8 +27,12 @@ def main():
                     break
                 shutil.rmtree(Path(config["save_path"]))
             prescriptor_factory = BuildingPrescriptorFactory(**config.pop("prescriptor_params"))
-            evaluator = BuildingEvaluator()
-            evolution = Evolution(prescriptor_factory=prescriptor_factory, evaluator=evaluator, **config)
+            evaluator = BuildingEvaluator(**config.pop("eval_params"))
+            validator = BuildingValidator()
+            evolution = Evolution(prescriptor_factory=prescriptor_factory,
+                                  evaluator=evaluator,
+                                  validator=validator,
+                                  **config)
             evolution.run_evolution()
 
 

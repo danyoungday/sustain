@@ -8,10 +8,13 @@ env = BuildingEnv(params)
 print(env.observation_space.shape)
 # Print action space
 print(env.action_space.shape)
+action = env.action_space.sample()
+for i in range(10):
+    num_hours = 24
+    obs, _ = env.reset(seed=123)
+    total_reward = 0
+    for _ in range(num_hours):
+        obs, reward, terminated, truncated, info = env.step(action)
+        total_reward += reward
 
-num_hours = 24
-obs, _ = env.reset(seed=123)
-rewards = []
-for _ in range(num_hours):
-    action = env.action_space.sample()
-    obs, reward, terminated, truncated, info = env.step(action)
+    print(total_reward)
