@@ -5,7 +5,7 @@ remove_population_pct: 0.8
 n_elites: 10
 mutation_rate: 0.1
 mutation_factor: 0.1
-save_path: results/optimize
+save_path: results/noseed
 seed_dir: null
 val_interval: 1
 
@@ -19,9 +19,13 @@ prescriptor_params:
 
 # Evaluation params
 eval_params:
+  outcomes: 
+    - reward
   epochs: 300
   batch_size: 16
   device: cuda
+  n_repeats: 10
+  keep_pct: 0.5
 
 
 # TODO: Can this be removed?

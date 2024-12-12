@@ -1,5 +1,8 @@
 __pycache__/
 sustaingym/
+presp/
 results/
+
+.vscode/
 
 *.zip

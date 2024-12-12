@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from presp.predictor import BuildingPredictor, BuildingDS, train_model
+from building_predictor import BuildingPredictor, BuildingDS, train_model
 
 
 class TestPredictor(unittest.TestCase):

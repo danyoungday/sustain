@@ -4,9 +4,9 @@ import shutil
 
 import yaml
 
-from presp.evaluator import BuildingEvaluator, BuildingValidator
+from building_evaluator import BuildingEvaluator, BuildingValidator
+from building_prescriptor import BuildingPrescriptorFactory
 from presp.evolution import Evolution
-from presp.prescriptor import BuildingPrescriptorFactory
 
 
 def main():
