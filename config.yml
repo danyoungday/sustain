@@ -5,7 +5,7 @@ remove_population_pct: 0.8
 n_elites: 10
 mutation_rate: 0.1
 mutation_factor: 0.1
-save_path: results/noseed
+save_path: results/avgval
 seed_dir: null
 val_interval: 1
 
@@ -27,7 +27,8 @@ eval_params:
   n_repeats: 10
   keep_pct: 0.5
 
-
-# TODO: Can this be removed?
-outcomes:
-  - reward
+# Validation params
+val_params:
+  outcomes:
+    - reward
+  n_repeats: 10

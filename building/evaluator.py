@@ -4,7 +4,7 @@ from presp.prescriptor import Prescriptor
 import torch
 from torch.utils.data import DataLoader
 
-from building_predictor import train_model, BuildingDS
+from building.predictor import train_model, BuildingDS
 from sustaingym.envs.building import BuildingEnv, ParameterGenerator
 
 
@@ -98,21 +98,25 @@ class BuildingValidator(Evaluator):
     Validation evaluator for the BuildingEnv. Doesn't use a predictor just directly checks a candidate against the
     environment. Doesn't update itself.
     """
-    def __init__(self):
+    def __init__(self, n_repeats: int, outcomes: list[str]):
+        super().__init__(outcomes)
         params = ParameterGenerator(
             building='OfficeSmall', weather='Hot_Dry', location='Tucson')
         self.env = BuildingEnv(params)
+        self.n_repeats = n_repeats
 
     def update_predictor(self, elites: list[Prescriptor]):
         pass
 
     def evaluate_candidate(self, candidate: Prescriptor) -> np.ndarray:
         num_hours = 24
-        obs, _ = self.env.reset(seed=123)
-        total_reward = 0
-        for _ in range(num_hours):
-            obs = torch.tensor(obs, device=candidate.device, dtype=torch.float32)
-            action = candidate.forward(obs).cpu().numpy()
-            obs, reward, _, _, _ = self.env.step(action)
-            total_reward += reward
-        return np.array([-1 * total_reward])
+        avg_reward = 0
+        for i in range(self.n_repeats):
+            obs, _ = self.env.reset(seed=i)
+            for _ in range(num_hours):
+                obs = torch.tensor(obs, device=candidate.device, dtype=torch.float32)
+                action = candidate.forward(obs).cpu().numpy()
+                obs, reward, _, _, _ = self.env.step(action)
+                avg_reward += reward
+
+        return np.array([-1 * avg_reward / self.n_repeats])
